@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معرض خرائط دلتا الشمال</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 4px;
+            background: #2ecc71;
+            z-index: 2000;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .header .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .header .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+
+        .header .nav-links a:hover {
+            color: #dfe6e9;
+        }
+
+        .maps-gallery {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .maps-gallery h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .search-bar {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .search-bar input {
+            padding: 0.5rem 1rem;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .search-bar button {
+            padding: 0.5rem 1rem;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .search-bar button:hover {
+            background: #2980b9;
+        }
+
+        .view-toggle {
+            margin-bottom: 2rem;
+        }
+
+        .view-toggle button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #3498db;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 0.5rem;
+            transition: background 0.3s ease;
+        }
+
+        .view-toggle button:hover {
+            background: #2980b9;
+        }
+
+        .view-toggle button.active {
+            background: #2ecc71;
+        }
+
+        .maps-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .maps-container.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .map-card {
+            background: #fff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .map-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .map-card img {
+            width: 100%;
+            height: 750px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .map-card:hover img {
+            transform: scale(1.15);
+        }
+
+        .map-content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .map-content h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .map-content p {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .map-content .details-btn {
+            padding: 0.5rem 1rem;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .map-content .details-btn:hover {
+            background: #2980b9;
+        }
+
+        .map-card:nth-child(1) h2 { color: #3498db; }
+        .map-card:nth-child(2) h2 { color: #2ecc71; }
+        .map-card:nth-child(3) h2 { color: #e67e22; }
+        .map-card:nth-child(4) h2 { color: #f1c40f; }
+
+        .map-card::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition
+
+: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .map-card:hover::after {
+            opacity: 1;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal img {
+            max-width: 100%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .modal .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            color: #fff;
+            background: #3498db;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .modal .close-btn:hover {
+            background: #2980b9;
+        }
+
+        .scroll-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 0.8rem;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            transition: background 0.3s ease;
+        }
+
+        .scroll-top:hover {
+            background: #2980b9;
+        }
+
+        .footer {
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            padding: 2rem;
+            text-align: center;
+            color: #dfe6e9;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer p {
+            font-size: 1rem;
+        }
+
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+
+        .footer a:hover {
+            color: #dfe6e9;
+        }
+
+        @media (max-width: 768px) {
+            .maps-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .maps-gallery h1 {
+                font-size: 2rem;
+            }
+
+            .map-card img {
+                height: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .maps-container {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .map-card img {
+                height: 150px;
+            }
+
+            .search-bar input {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div id="progress-bar"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">خرائط دلتا الشمال</div>
+        <div class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="#gallery">المعرض</a>
+            <a href="prop.html">اتصل بنا</a>
+        </div>
+        <select id="language-switcher">
+            <option value="ar">العربية</option>
+            <option value="en">English</option>
+        </select>
+    </header>
+
+    <!-- Maps Gallery -->
+    <section class="maps-gallery" id="gallery">
+        <h1>استكشف خرائط دلتا الشمال</h1>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="ابحث عن الخرائط بالاسم...">
+            <button id="search-btn"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="view-toggle">
+            <button id="grid-view" class="active">عرض شبكي</button>
+            <button id="list-view">عرض قائمة</button>
+        </div>
+        <div class="maps-container">
+            <div class="map-card" data-tooltip="مؤشر البناء العمراني لبحيرة البرلس 2025">
+                <img src="image/ndbi brols.jpg" alt="مؤشر البناء العمراني لبحيرة البرلس">
+                <div class="map-content">
+                    <h2>مؤشر البناء العمراني لبحيرة البرلس</h2>
+                    <p>تشير إلى وجود تحول ملحوظ في طبيعة الغطاء الأرضي حيث تبين الخرائط أن المساحات العمرانية التي تظهر باللون البني كانت تهيمن على معظم أراضي البحيرة في عام 2013، مما يشير إلى سيطرة النشاط البشري على مساحة كبيرة من البيئة المحيطة بالبحيرة. ومع مرور الوقت وبحلول عام 2019، لم يطرأ تغيير كبير على هذا الوضع حيث استمرت المناطق العمرانية في السيطرة مع وجود بعض التحولات الطفيفة في الأطراف. لكن الوضع تغير بشكل واضح في عام 2025، حيث تراجعت المساحات العمرانية بشكل ملحوظ وظهرت مساحات واسعة من الأغطية الأخرى التي تظهر باللون البيج، وهو ما يعكس إما تراجع النشاط العمراني أو حد —
+
+وث تغييرات بيئية أو قرارات تنظيمية.</p>
+                    <button class="details-btn" data-img="mapss/Om/ndbi brols.jpg">عرض التفاصيل</button>
+                </div>
+            </div>
+            <div class="map-card" data-tooltip="مؤشر البناء العمراني لبحيرة إدكو 2025">
+                <img src="image/ndbi manzala2.jpg" alt="مؤشر البناء العمراني لبحيرة إدكو">
+                <div class="map-content">
+                    <h2>مؤشر البناء العمراني لبحيرة إدكو</h2>
+                    <p>توضح تغيرًا تدريجيًا كبيرًا في الامتداد العمراني بين الأعوام 2013 و2025. حيث بدأت البحيرة في 2013 بمساحة مائية واسعة داخل حدود واضحة تحيط بها أراضٍ زراعية ومناطق غير مطورة، بينما كانت المناطق العمرانية أقل انتشارًا ومتركزة بشكل أساسي في الجهة الشمالية الغربية. لكن مع مرور الوقت وتحديدًا في 2019، بدأ الزحف العمراني يمتد من الجنوب والغرب ليغطي أطراف البحيرة ويأكل من المساحات المفتوحة بشكل ملحوظ. ومع حلول 2025، تظهر البحيرة وقد تقلصت بشكل كبير بسبب تغلغل المناطق الحضرية إلى داخل حدودها.</p>
+                    <button class="details-btn" data-img="image/ndbi manzala2.jpg">عرض التفاصيل</button>
+                </div>
+            </div>
+            <div class="map-card" data-tooltip="مؤشر البناء العمراني لبحيرة المنزلة 2025">
+                <img src="image/ndbiedco.jpg" alt="مؤشر البناء العمراني لبحيرة المنزلة">
+                <div class="map-content">
+                    <h2>مؤشر البناء العمراني لبحيرة المنزلة</h2>
+                    <p>تظهر تطورًا أكبر وأسرع في التوسع الحضري. ففي 2013، كانت المناطق العمرانية محدودة ومتركزة بشكل رئيسي في الشمال الشرقي حول المدن الساحلية، أما باقي المناطق فكانت لا تزال زراعية أو غير مستغلة. ولكن بحلول 2019، توسعت الكتل العمرانية باتجاه الجنوب الغربي مع ظهور نمط خطي على طول مجرى المياه الداخلي، وهو ما يعكس اتجاهًا للبناء على امتداد البنية التحتية القائمة. وفي 2025، تصبح الصورة أكثر وضوحًا حيث تغطي المناطق الحضرية معظم الأراضي المحيطة بالبحيرة.</p>
+                    <button class="details-btn" data-img="image/ndbiedco.jpg">عرض التفاصيل</button>
+                </div>
+            </div>
+            <div class="map-card" data-tooltip="مؤشر البناء العمراني لبحيرة مريوط 2025">
+                <img src="image/ndbi maryot.jpg" alt="مؤشر البناء العمراني لبحيرة مريوط">
+                <div class="map-content">
+                    <h2>مؤشر البناء العمراني لبحيرة مريوط</h2>
+                    <p>تكشف عن تطور مماثل من حيث التوسع العمراني، لكنها بدأت من نقطة أقل كثافة. حيث كانت المناطق المحيطة بالبحيرة في 2013 لا تزال تحتفظ بطابعها الطبيعي مع تركز سكاني محدود على الجهة الشرقية. وفي عام 2019، بدأ الزحف الحضري يظهر بشكل أوضح على الحواف الشرقية والجنوبية للبحيرة. وفي 2025، تصبح معظم المنطقة المحيطة بالبحيرة مغطاة بالعمران بشكل شبه كامل، وخصوصًا من الجهة الشرقية.</p>
+                    <button class="details-btn" data-img="image/ndbi maryot.jpg">عرض التفاصيل</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal -->
+    <div class="modal" id="map-modal">
+        <img id="modal-image" src="" alt="خريطة كاملة">
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-top" id="scroll-top"><i class="fas fa-arrow-up"></i></button>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© حقوق النشر @ ٢٠٢٥ بواسطة عمار محمد عبد الله | جميع الحقوق محفوظة!  <a href="promblems.html">اتصل بنا</a></p>
+    </footer>
+
+    <script>
+        const translations = {
+            ar: {
+                title: "معرض خرائط دلتا الشمال",
+                logo: "خرائط دلتا الشمال",
+                home: "الرئيسية",
+                gallery: "المعرض",
+                about: "عن الموقع",
+                contact: "اتصل بنا",
+                explore: "استكشف خرائط دلتا الشمال",
+                search: "ابحث عن الخرائط بالاسم...",
+                gridView: "عرض شبكي",
+                listView: "عرض قائمة",
+                burullus: "مؤشر البناء العمراني لبحيرة البرلس",
+                burullusText: "تشير إلى وجود تحول ملحوظ في طبيعة الغطاء الأرضي حيث تبين الخرائط أن المساحات العمرانية التي تظهر باللون البني كانت تهيمن على معظم أراضي البحيرة في عام 2013، مما يشير إلى سيطرة النشاط البشري على مساحة كبيرة من البيئة المحيطة بالبحيرة. ومع مرور الوقت وبحلول عام 2019، لم يطرأ تغيير كبير على هذا الوضع حيث استمرت المناطق العمرانية في السيطرة مع وجود بعض التحولات الطفيفة في الأطراف. لكن الوضع تغير بشكل واضح في عام 2025، حيث تراجعت المساحات العمرانية بشكل ملحوظ وظهرت مساحات واسعة من الأغطية الأخرى التي تظهر باللون البيج، وهو ما يعكس إما تراجع النشاط العمراني أو حدوث تغييرات بيئية أو قرارات تنظيمية.",
+                edko: "مؤشر البناء العمراني لبحيرة إدكو",
+                edkoText: "توضح تغيرًا تدريجيًا كبيرًا في الامتداد العمراني بين الأعوام 2013 و2025. حيث بدأت البحيرة في 2013 بمساحة مائية واسعة داخل حدود واضحة تحيط بها أراضٍ زراعية ومناطق غير مطورة، بينما كانت المناطق العمرانية أقل انتشارًا ومتركزة بشكل أساسي في الجهة الشمالية الغربية. لكن مع مرور الوقت وتحديدًا في 2019، بدأ الزحف العمراني يمتد من الجنوب والغرب ليغطي أطراف البحيرة ويأكل من المساحات المفتوحة بشكل ملحوظ. ومع حلول 2025، تظهر البحيرة وقد تقلصت بشكل كبير بسبب تغلغل المناطق الحضرية إلى داخل حدودها.",
+                manzala: "مؤشر البناء العمراني لبحيرة المنزلة",
+                manzalaText: "تظهر تطورًا أكبر وأسرع في التوسع الحضري. ففي 2013، كانت المناطق العمرانية محدودة ومتركزة بشكل رئيسي في الشمال الشرقي حول المدن الساحلية، أما باقي المناطق فكانت لا تزال زراعية أو غير مستغلة. ولكن بحلول 2019، توسعت الكتل العمرانية باتجاه الجنوب الغربي مع ظهور نمط خطي على طول مجرى المياه الداخلي، وهو ما يعكس اتجاهًا للبناء على امتداد البنية التحتية القائمة. وفي 2025، تصبح الصورة أكثر وضوحًا حيث تغطي المناطق الحضرية معظم الأراضي المحيطة بالبحيرة.",
+                mariout: "مؤشر البناء العمراني لبحيرة مريوط",
+                marioutText: "تكشف عن تطور مماثل من حيث التوسع العمراني، لكنها بدأت من نقطة أقل كثافة. حيث كانت المناطق المحيطة بالبحيرة في 2013 لا تزال تحتفظ بطابعها الطبيعي مع تركز سكاني محدود على الجهة الشرقية. وفي عام 2019، بدأ الزحف الحضري يظهر بشكل أوضح على الحواف الشرقية والجنوبية للبحيرة. وفي 2025، تصبح معظم المنطقة المحيطة بالبحيرة مغطاة بالعمران بشكل شبه كامل، وخصوصًا من الجهة الشرقية.",
+                details: "عرض التفاصيل",
+                footer: "© حقوق النشر @ ٢٠٢٥ بواسطة عمار محمد عبد الله | جميع الحقوق محفوظة!  ",
+                tooltipBurullus: "مؤشر البناء العمراني لبحيرة البرلس 2025",
+                tooltipEdko: "مؤشر البناء العمراني لبحيرة إدكو 2025",
+                tooltipManzala: "مؤشر البناء العمراني لبحيرة المنزلة 2025",
+                tooltipMariout: "مؤشر البناء العمراني لبحيرة مريوط 2025"
+            },
+            en: {
+                title: "North Delta Maps Gallery",
+                logo: "North Delta Maps",
+                home: "Home",
+                gallery: "Gallery",
+                about: "About",
+                contact: "Contact Us",
+                explore: "Explore North Delta Maps",
+                search: "Search maps by name...",
+                gridView: "Grid View",
+                listView: "List View",
+                burullus: "Urban Construction Index for Burullus Lake",
+                burullusText: "Indicates a significant transformation in land cover. Maps show that urban areas, appearing in brown, dominated most of the lake's surroundings in 2013, reflecting heavy human activity. By 2019, little change occurred, with urban areas still predominant and minor shifts at the edges. However, by 2025, urban areas significantly decreased, and large areas of other cover types, appearing in beige, emerged, suggesting either a decline in urban activity, environmental changes, or regulatory decisions.",
+                edko: "Urban Construction Index for Edko Lake",
+                edkoText: "Shows a significant gradual change in urban expansion between 2013 and 2025. In 2013, the lake had a large water area within clear boundaries, surrounded by agricultural and undeveloped lands, with urban areas less prevalent and concentrated mainly in the northwest. By 2019, urban sprawl extended from the south and west, encroaching significantly on open spaces. By 2025, the lake's area has significantly reduced due to the penetration of urban areas within its boundaries.",
+                manzala: "Urban Construction Index for Manzala Lake",
+                manzalaText: "Exhibits a faster and larger urban expansion. In 2013, urban areas were limited, mainly concentrated in the northeast around coastal cities, with the rest being agricultural or unused. By 2019, urban blocks expanded southwest, forming a linear pattern along internal watercourses, reflecting construction along existing infrastructure. By 2025, urban areas cover most of the lake's surrounding lands.",
+                mariout: "Urban Construction Index for Mariout Lake",
+                marioutText: "Reveals a similar urban expansion trend but starting from a less dense point. In 2013, the areas around the lake retained a natural character with limited population concentration in the east. By 2019, urban sprawl became more evident on the eastern and southern edges. By 2025, most of the lake's surrounding area is almost entirely covered by urban development, especially in the east.",
+                details: "View Details",
+                footer: "© Copyright @ 2025 by Ammar Mohamed Abdallah | All Rights Reserved! ",
+                tooltipBurullus: "Urban Construction Index for Burullus Lake 2025",
+                tooltipEdko: "Urban Construction Index for Edko Lake 2025",
+                tooltipManzala: "Urban Construction Index for Manzala Lake 2025",
+                tooltipMariout: "Urban Construction Index for Mariout Lake 2025"
+            }
+        };
+
+        // Language Switcher
+        document.getElementById('language-switcher').addEventListener('change', function() {
+            const lang = this.value;
+            document.title = translations[lang].title;
+            document.querySelector('.logo').textContent = translations[lang].logo;
+            document.querySelectorAll('.nav-links a')[0].textContent = translations[lang].home;
+            document.querySelectorAll('.nav-links a')[1].textContent = translations[lang].gallery;
+            document.querySelectorAll('.nav-links a')[2].textContent = translations[lang].about;
+            document.querySelectorAll('.nav-links a')[3].textContent = translations[lang].contact;
+            document.querySelector('.maps-gallery h1').textContent = translations[lang].explore;
+            document.querySelector('#search-input').placeholder = translations[lang].search;
+            document.querySelector('#grid-view').textContent = translations[lang].gridView;
+            document.querySelector('#list-view').textContent = translations[lang].listView;
+            const mapCards = document.querySelectorAll('.map-card');
+            mapCards[0].querySelector('h2').textContent = translations[lang].burullus;
+            mapCards[0].querySelector('p').textContent = translations[lang].burullusText;
+            mapCards[0].setAttribute('data-tooltip', translations[lang].tooltipBurullus);
+            mapCards[1].querySelector('h2').textContent = translations[lang].edko;
+            mapCards[1].querySelector('p').textContent = translations[lang].edkoText;
+            mapCards[1].setAttribute('data-tooltip', translations[lang].tooltipEdko);
+            mapCards[2].querySelector('h2').textContent = translations[lang].manzala;
+            mapCards[2].querySelector('p').textContent = translations[lang].manzalaText;
+            mapCards[2].setAttribute('data-tooltip', translations[lang].tooltipManzala);
+            mapCards[3].querySelector('h2').textContent = translations[lang].mariout;
+            mapCards[3].querySelector('p').textContent = translations[lang].marioutText;
+            mapCards[3].setAttribute('data-tooltip', translations[lang].tooltipMariout);
+            document.querySelectorAll('.details-btn').forEach(btn => btn.textContent = translations[lang].details);
+            document.querySelector('.footer p').innerHTML = translations[lang].footer + '<a href="promblems.html">' + translations[lang].contact + '</a>';
+
+            // Change direction and language
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+        });
+
+        // Progress Bar on Page Load and Scroll
+        window.addEventListener('load', () => {
+            document.getElementById('progress-bar').style.width = '100%';
+            setTimeout(() => {
+                document.getElementById('progress-bar').style.width = '0';
+            }, 500);
+        });
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.getElementById('progress-bar').style.width = `${scrollPercent}%`;
+        });
+
+        // Smooth Scroll for Nav Links
+        document.querySelectorAll('.nav-links a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                if (this.getAttribute('href').startsWith('#')) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+
+        // Scroll Animation for Map Cards
+        const mapCards = document.querySelectorAll('.map-card');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.2 });
+
+        mapCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(card);
+        });
+
+        // View Toggle
+        const gridViewBtn = document.getElementById('grid-view');
+        const listViewBtn = document.getElementById('list-view');
+        const mapsContainer = document.querySelector('.maps-container');
+
+        gridViewBtn.addEventListener('click', () => {
+            mapsContainer.classList.remove('list-view');
+            gridViewBtn.classList.add('active');
+            listViewBtn.classList.remove('active');
+        });
+
+        listViewBtn.addEventListener('click', () => {
+            mapsContainer.classList.add('list-view');
+            listViewBtn.classList.add('active');
+            gridViewBtn.classList.remove('active');
+        });
+
+        // Modal for Full-Screen Map
+        const modal = document.getElementById('map-modal');
+        const modalImage = document.getElementById('modal-image');
+        const closeBtn = document.querySelector('.close-btn');
+        const detailsButtons = document.querySelectorAll('.details-btn');
+
+        detailsButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const imgSrc = btn.getAttribute('data-img');
+                modalImage.src = imgSrc;
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // Search Functionality
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', () => {
+            const filter = searchInput.value.toLowerCase();
+            mapCards.forEach(card => {
+                const title = card.querySelector('h2').textContent.toLowerCase();
+                card.style.display = title.includes(filter) ? 'block' : 'none';
+            });
+        });
+
+        // Scroll to Top Button
+        const scrollTopBtn = document.getElementById('scroll-top');
+        window.addEventListener('scroll', () => {
+            scrollTopBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
+        });
+
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+</html>
